@@ -1,0 +1,37 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow read, write: if isAuthenticated() && isOwner(userId);
+    }
+
+    // Classes Collection
+    match /classes/{classId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == resource.data.teacherId;
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.teacherId;
+    }
+
+    // Students Collection
+    match /students/{studentId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == resource.data.teacherId;
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.teacherId;
+    }
+
+    // Attendance Collection
+    match /attendance/{attendanceId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == resource.data.teacherId;
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.teacherId;
+    }
+  }
+}
